@@ -1,0 +1,4 @@
+/aiactive ( filesrc location=/home/hazen/Desktop/videos/AiActive_Test.mp4 ! qtdemux ! h264parse ! rtph264pay name=pay0 pt=96 )
+/makkah ( filesrc location=/home/hazen/Desktop/videos/makkah_3.mp4 ! qtdemux ! h264parse ! rtph264pay name=pay0 pt=96 )
+/alhajj ( filesrc location=/home/hazen/Desktop/videos/output.mp4 ! qtdemux ! h264parse ! rtph264pay name=pay0 pt=96 )
+/ledsynergy ( filesrc location=/home/hazen/Desktop/videos/ledsynergy4h.mp4 ! qtdemux ! h265parse ! rtph265pay name=pay0 pt=96 )

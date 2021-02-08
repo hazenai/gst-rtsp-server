@@ -1,0 +1,11 @@
+[Unit]
+Description=RTSP Server
+
+[Service]
+Type=simple
+Restart=on-failure
+User= root
+ExecStart=/bin/bash /home/hazen/Downloads/gst-rtsp-server-1.14.2/examples/test-launch /etc/rtspconfig.txt
+
+[Install]
+WantedBy=multi-user.target

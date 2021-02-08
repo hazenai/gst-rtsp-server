@@ -21,17 +21,18 @@
 
 #include <gst/rtsp-server/rtsp-server.h>
 
-#define DEFAULT_RTSP_PORT "8554"
-#define DEFAULT_DISABLE_RTCP FALSE
+#include <stdio.h>
+#include <stdlib.h>
+
+#define DEFAULT_RTSP_PORT "554"
+
+#define FILE_READ_BUFF_SIZE 1024
 
 static char *port = (char *) DEFAULT_RTSP_PORT;
-static gboolean disable_rtcp = DEFAULT_DISABLE_RTCP;
 
 static GOptionEntry entries[] = {
   {"port", 'p', 0, G_OPTION_ARG_STRING, &port,
       "Port to listen on (default: " DEFAULT_RTSP_PORT ")", "PORT"},
-  {"disable-rtcp", '\0', 0, G_OPTION_ARG_NONE, &disable_rtcp,
-      "Whether RTCP should be disabled (default false)", NULL},
   {NULL}
 };
 
@@ -71,13 +72,48 @@ main (int argc, char *argv[])
    * gst-launch syntax to create pipelines.
    * any launch line works as long as it contains elements named pay%d. Each
    * element with pay%d names will be a stream */
-  factory = gst_rtsp_media_factory_new ();
-  gst_rtsp_media_factory_set_launch (factory, argv[1]);
-  gst_rtsp_media_factory_set_shared (factory, TRUE);
-  gst_rtsp_media_factory_set_enable_rtcp (factory, !disable_rtcp);
 
-  /* attach the test factory to the /test url */
-  gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
+  // int i = 2;
+  // int number_of_streams = 0;
+  // sscanf(argv[1], "%d", &number_of_streams);
+  // g_print("Streams: %d\n", number_of_streams);
+
+  FILE *fptr;
+  fptr = fopen(argv[1],"r");
+  if(fptr == NULL)
+  {
+    printf("Error! Unable to open config file for reading.");   
+    exit(1);             
+  }
+
+  char mountpoint[FILE_READ_BUFF_SIZE];
+  char pipeline[FILE_READ_BUFF_SIZE];
+  while(fscanf(fptr,"%s", &mountpoint) > 0) 
+  {
+    if ( fgets(pipeline,FILE_READ_BUFF_SIZE,fptr) == pipeline ) 
+    {
+      pipeline[strlen(pipeline)] = '\0';
+      g_print("Mountpoint: %s\n", mountpoint);
+      g_print("Pipeline: %s\n", pipeline);
+
+      factory = gst_rtsp_media_factory_new ();
+
+      gst_rtsp_media_factory_set_launch (factory, pipeline);
+      gst_rtsp_media_factory_set_shared (factory, TRUE);
+
+      /* attach the test factory to the /test url */
+      gst_rtsp_mount_points_add_factory (mounts, mountpoint, factory);
+
+      g_print("=========================\n");
+    }
+    else
+    {
+      g_print("Error! While reading file.");
+      break;
+    }
+  }
+
+  fclose(fptr);
 
   /* don't need the ref to the mapper anymore */
   g_object_unref (mounts);
@@ -86,7 +122,7 @@ main (int argc, char *argv[])
   gst_rtsp_server_attach (server, NULL);
 
   /* start serving */
-  g_print ("stream ready at rtsp://127.0.0.1:%s/test\n", port);
+  g_print ("Streams Ready at rtsp://127.0.0.1:%s/\n", port);
   g_main_loop_run (loop);
 
   return 0;
